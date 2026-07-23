@@ -19,6 +19,6 @@ class Invoices extends Component
 
         return view('livewire.portal.invoices', [
             'invoices' => $invoices,
-        ])->layout('layouts.portal', ['title' => 'My Invoices · TrueWrench']);
+        ])->layout('components.layouts.portal', ['title' => 'My Invoices · TrueWrench']);
     }
 }

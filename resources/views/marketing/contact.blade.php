@@ -23,20 +23,26 @@
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-4">
                 <h2 class="text-xl font-bold text-brand-700">Send a Message</h2>
-                <form class="space-y-4">
+                @if (session('success'))
+                    <div class="bg-green-50 text-green-700 p-4 rounded-md border border-green-200">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                <form method="POST" action="{{ route('contact.submit') }}" class="space-y-4">
+                    @csrf
                     <div>
                         <label class="block text-sm font-medium text-slate-700">Your Name</label>
-                        <input type="text" class="w-full border-slate-300 rounded-md mt-1 shadow-sm">
+                        <input type="text" name="name" required class="w-full border-slate-300 rounded-md mt-1 shadow-sm focus:border-brand-500 focus:ring-brand-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700">Email Address</label>
-                        <input type="email" class="w-full border-slate-300 rounded-md mt-1 shadow-sm">
+                        <input type="email" name="email" required class="w-full border-slate-300 rounded-md mt-1 shadow-sm focus:border-brand-500 focus:ring-brand-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700">Message</label>
-                        <textarea rows="4" class="w-full border-slate-300 rounded-md mt-1 shadow-sm"></textarea>
+                        <textarea rows="4" name="message" required class="w-full border-slate-300 rounded-md mt-1 shadow-sm focus:border-brand-500 focus:ring-brand-500"></textarea>
                     </div>
-                    <button type="button" class="bg-brand-700 hover:bg-brand-800 text-white font-bold px-6 py-2 rounded-md shadow">
+                    <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-bold px-6 py-2 rounded-md shadow focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:outline-none">
                         Send Message
                     </button>
                 </form>

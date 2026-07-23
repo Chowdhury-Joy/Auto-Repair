@@ -36,6 +36,6 @@ class Appointments extends Component
 
         return view('livewire.portal.appointments', [
             'appointments' => $appointments,
-        ])->layout('layouts.portal', ['title' => 'My Appointments · TrueWrench']);
+        ])->layout('components.layouts.portal', ['title' => 'My Appointments · TrueWrench']);
     }
 }

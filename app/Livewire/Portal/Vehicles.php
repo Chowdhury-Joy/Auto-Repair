@@ -62,6 +62,6 @@ class Vehicles extends Component
 
         return view('livewire.portal.vehicles', [
             'vehicles' => $vehicles,
-        ])->layout('layouts.portal', ['title' => 'My Vehicles · TrueWrench']);
+        ])->layout('components.layouts.portal', ['title' => 'My Vehicles · TrueWrench']);
     }
 }

@@ -31,10 +31,25 @@ Route::get('/contact', function () {
     return view('marketing.contact');
 })->name('contact');
 
+Route::post('/contact', function (Illuminate\Http\Request $request) {
+    $request->validate([
+        'name' => 'required',
+        'email' => 'required|email',
+        'message' => 'required',
+    ]);
+    
+    Illuminate\Support\Facades\Log::info('Contact message received', $request->all());
+    
+    return back()->with('success', 'Thanks for your message! We will get back to you soon.');
+})->name('contact.submit');
+
 Route::get('/book', BookAppointment::class)->name('book');
 
 // --- Customer Auth ---
 Route::get('/login', CustomerLogin::class)->name('login');
+Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
+Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
+
 Route::post('/logout', function () {
     Auth::logout();
     session()->invalidate();

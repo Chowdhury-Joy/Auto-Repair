@@ -117,6 +117,16 @@ class BookAppointment extends Component
             }
             $this->step = 3;
         } elseif ($this->step === 3) {
+            $this->validate([
+                'contactName' => 'required|string|max:255',
+                'contactEmail' => 'required|email|max:255',
+                'contactPhone' => 'required|string|max:20',
+                'newVehicleMake' => 'required_if:useExistingVehicle,false|string|max:255',
+                'newVehicleModel' => 'required_if:useExistingVehicle,false|string|max:255',
+                'newVehicleYear' => 'required_if:useExistingVehicle,false|string|size:4',
+                'newVehiclePlate' => 'nullable|string|max:20',
+                'newVehicleMileage' => 'nullable|integer|min:0',
+            ]);
             $this->step = 4;
         }
     }
@@ -238,17 +248,21 @@ class BookAppointment extends Component
         // Guest flow: find or create a User + Customer by email.
         $user = User::where('email', $this->contactEmail)->first();
         
-        if (!$user) {
-            $user = User::create([
-                'name' => $this->contactName,
-                'email' => $this->contactEmail,
-                'password' => bcrypt('password'), // default password for demo
-                'phone' => $this->contactPhone,
-                'role' => UserRole::Customer,
-            ]);
-            
-            session()->flash('success', "An account has been created for you. You can log in to the portal with password 'password'.");
+        if ($user) {
+            throw new RuntimeException('An account already exists for this email address. Please log in to book an appointment.');
         }
+
+        $password = \Illuminate\Support\Str::password(12);
+
+        $user = User::create([
+            'name' => $this->contactName,
+            'email' => $this->contactEmail,
+            'password' => bcrypt($password),
+            'phone' => $this->contactPhone,
+            'role' => UserRole::Customer,
+        ]);
+        
+        session()->flash('success', "An account has been created for you. You can set a password anytime using the 'Forgot Password' link on the login page.");
 
         return $user->customer ?: $user->customer()->create([]);
     }
@@ -323,6 +337,6 @@ class BookAppointment extends Component
     public function render()
     {
         return view('livewire.book-appointment')
-            ->layout('layouts.public', ['title' => 'Book an Appointment · TrueWrench']);
+            ->layout('components.layouts.public', ['title' => 'Book an Appointment · TrueWrench']);
     }
 }

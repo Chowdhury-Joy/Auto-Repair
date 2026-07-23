@@ -40,6 +40,6 @@ class Dashboard extends Component
             'vehicles' => $vehicles,
             'upcomingAppointments' => $upcomingAppointments,
             'inProgressWorkOrders' => $inProgressWorkOrders,
-        ])->layout('layouts.portal', ['title' => 'My Garage · TrueWrench']);
+        ])->layout('components.layouts.portal', ['title' => 'My Garage · TrueWrench']);
     }
 }

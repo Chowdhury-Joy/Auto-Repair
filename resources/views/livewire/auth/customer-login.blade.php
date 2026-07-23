@@ -14,9 +14,16 @@
             @error('password') <span class="text-sm text-red-600 mt-1 block">{{ $message }}</span> @enderror
         </div>
 
-        <div class="flex items-center">
-            <input type="checkbox" wire:model="remember" id="remember" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-            <label for="remember" class="ml-2 block text-sm text-slate-700">Remember me</label>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <input type="checkbox" wire:model="remember" id="remember" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                <label for="remember" class="ml-2 block text-sm text-slate-700">Remember me</label>
+            </div>
+            <div class="text-sm">
+                <a href="{{ route('password.request') }}" class="font-medium text-brand-600 hover:text-brand-500">
+                    Forgot your password?
+                </a>
+            </div>
         </div>
 
         <div class="pt-2">

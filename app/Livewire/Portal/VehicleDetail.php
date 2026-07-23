@@ -39,6 +39,6 @@ class VehicleDetail extends Component
             'vehicle' => $vehicle,
             'workOrders' => $workOrders,
             'activeWorkOrder' => $activeWorkOrder,
-        ])->layout('layouts.portal', ['title' => "{$vehicle->display_name} · TrueWrench"]);
+        ])->layout('components.layouts.portal', ['title' => "{$vehicle->display_name} · TrueWrench"]);
     }
 }

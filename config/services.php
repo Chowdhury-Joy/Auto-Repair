@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'truewrench' => [
+        'webhook_url' => env('TRUEWRENCH_WEBHOOK_URL'),
+    ],
+
 ];

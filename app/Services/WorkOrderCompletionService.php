@@ -15,7 +15,7 @@ class WorkOrderCompletionService
 {
     public function complete(WorkOrder $workOrder, bool $generateInvoice = true): ?Invoice
     {
-        return Cache::lock('invoice_generation', 5)->block(5, function () use ($workOrder, $generateInvoice) {
+        return Cache::lock('invoice_generation_' . $workOrder->id, 5)->block(5, function () use ($workOrder, $generateInvoice) {
             return DB::transaction(function () use ($workOrder, $generateInvoice) {
                 $workOrder->update([
                     'status' => WorkOrderStatus::Completed,

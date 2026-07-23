@@ -30,6 +30,6 @@ class CustomerLogin extends Component
     public function render()
     {
         return view('livewire.auth.customer-login')
-            ->layout('layouts.public', ['title' => 'Customer Login · TrueWrench']);
+            ->layout('components.layouts.public', ['title' => 'Customer Login · TrueWrench']);
     }
 }
