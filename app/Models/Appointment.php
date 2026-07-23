@@ -17,10 +17,10 @@ class Appointment extends Model
     ];
 
     protected $casts = [
-        'starts_at'    => 'datetime',
-        'ends_at'      => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
         'confirmed_at' => 'datetime',
-        'status'       => AppointmentStatus::class,
+        'status' => AppointmentStatus::class,
     ];
 
     public function customer(): BelongsTo
@@ -71,7 +71,7 @@ class Appointment extends Model
     ): Builder {
         return $q->active()
             ->where('starts_at', '<', $end)
-            ->where('ends_at',   '>', $start);
+            ->where('ends_at', '>', $start);
     }
 
     public function scopeForBay(Builder $q, int $bayId): Builder

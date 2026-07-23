@@ -5,8 +5,8 @@ namespace App\Enums;
 enum UserRole: string
 {
     case Customer = 'customer';
-    case Staff    = 'staff';
-    case Admin    = 'admin';
+    case Staff = 'staff';
+    case Admin = 'admin';
 
     public function canAccessFilament(): bool
     {

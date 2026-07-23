@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Portal;
 
-use App\Enums\WorkOrderStatus;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use Illuminate\Support\Facades\Auth;
@@ -37,8 +36,8 @@ class VehicleDetail extends Component
         });
 
         return view('livewire.portal.vehicle-detail', [
-            'vehicle'         => $vehicle,
-            'workOrders'      => $workOrders,
+            'vehicle' => $vehicle,
+            'workOrders' => $workOrders,
             'activeWorkOrder' => $activeWorkOrder,
         ])->layout('layouts.portal', ['title' => "{$vehicle->display_name} · TrueWrench"]);
     }

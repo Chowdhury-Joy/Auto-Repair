@@ -15,8 +15,11 @@ use UnitEnum;
 class ServiceBayResource extends Resource
 {
     protected static ?string $model = ServiceBay::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-storefront';
-    protected static string | UnitEnum | null $navigationGroup = 'Shop Resources';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Shop Resources';
+
     protected static ?int $navigationSort = 10;
 
     public static function form(Schema $schema): Schema
@@ -45,9 +48,9 @@ class ServiceBayResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListServiceBays::route('/'),
+            'index' => Pages\ListServiceBays::route('/'),
             'create' => Pages\CreateServiceBay::route('/create'),
-            'edit'   => Pages\EditServiceBay::route('/{record}/edit'),
+            'edit' => Pages\EditServiceBay::route('/{record}/edit'),
         ];
     }
 }

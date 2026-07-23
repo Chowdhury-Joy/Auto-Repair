@@ -15,9 +15,9 @@ class OperationsAlert extends Model
     ];
 
     protected $casts = [
-        'payload'      => 'array',
+        'payload' => 'array',
         'delivered_at' => 'datetime',
-        'type'         => AlertType::class,
+        'type' => AlertType::class,
     ];
 
     public function reference(): MorphTo

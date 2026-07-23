@@ -13,10 +13,10 @@ class WorkOrderItem extends Model
     ];
 
     protected $casts = [
-        'quantity'     => 'decimal:2',
-        'rate_cents'   => 'integer',
+        'quantity' => 'decimal:2',
+        'rate_cents' => 'integer',
         'amount_cents' => 'integer',
-        'sort_order'   => 'integer',
+        'sort_order' => 'integer',
     ];
 
     public function workOrder(): BelongsTo

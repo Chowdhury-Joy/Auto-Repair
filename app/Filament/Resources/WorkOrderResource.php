@@ -19,8 +19,11 @@ use UnitEnum;
 class WorkOrderResource extends Resource
 {
     protected static ?string $model = WorkOrder::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-check';
-    protected static string | UnitEnum | null $navigationGroup = 'Operations';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
@@ -52,8 +55,11 @@ class WorkOrderResource extends Resource
                             Forms\Components\TextInput::make('quantity')
                                 ->numeric()->default(1)->minValue(0.01)->required(),
                             Forms\Components\TextInput::make('rate_cents')
-                                ->label('Rate (cents)')
-                                ->numeric()->required(),
+                                ->label('Rate ($)')
+                                ->numeric()
+                                ->required()
+                                ->formatStateUsing(fn ($state) => $state ? $state / 100 : null)
+                                ->dehydrateStateUsing(fn ($state) => $state ? (int) round($state * 100) : null),
                         ])
                         ->columns(4)
                         ->defaultItems(0)
@@ -77,7 +83,7 @@ class WorkOrderResource extends Resource
                     ->formatStateUsing(fn (WorkOrderStatus $s) => $s->label()),
                 Tables\Columns\TextColumn::make('total_cents')
                     ->label('Total')
-                    ->formatStateUsing(fn ($s) => '$' . number_format($s / 100, 2))
+                    ->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 2))
                     ->sortable(),
             ])
             ->defaultSort('opened_at', 'desc')
@@ -119,9 +125,9 @@ class WorkOrderResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListWorkOrders::route('/'),
+            'index' => Pages\ListWorkOrders::route('/'),
             'create' => Pages\CreateWorkOrder::route('/create'),
-            'edit'   => Pages\EditWorkOrder::route('/{record}/edit'),
+            'edit' => Pages\EditWorkOrder::route('/{record}/edit'),
         ];
     }
 }

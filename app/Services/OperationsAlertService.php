@@ -36,18 +36,20 @@ class OperationsAlertService
                     ->where('status', 'pending')
                     ->exists();
 
-                if ($exists) return;
+                if ($exists) {
+                    return;
+                }
 
                 OperationsAlert::create([
-                    'type'           => AlertType::AppointmentUnconfirmed,
+                    'type' => AlertType::AppointmentUnconfirmed,
                     'reference_type' => Appointment::class,
-                    'reference_id'   => $appt->id,
-                    'payload'        => [
-                        'customer_name'  => $appt->customer?->user?->name,
+                    'reference_id' => $appt->id,
+                    'payload' => [
+                        'customer_name' => $appt->customer?->user?->name,
                         'customer_email' => $appt->customer?->user?->email,
-                        'starts_at'      => $appt->starts_at->toIso8601String(),
+                        'starts_at' => $appt->starts_at->toIso8601String(),
                     ],
-                    'status'         => 'pending',
+                    'status' => 'pending',
                 ]);
             });
     }
@@ -66,19 +68,21 @@ class OperationsAlertService
                     ->where('status', 'pending')
                     ->exists();
 
-                if ($exists) return;
+                if ($exists) {
+                    return;
+                }
 
                 OperationsAlert::create([
-                    'type'           => AlertType::WorkOrderStuck,
+                    'type' => AlertType::WorkOrderStuck,
                     'reference_type' => WorkOrder::class,
-                    'reference_id'   => $wo->id,
-                    'payload'        => [
-                        'vehicle'   => "{$wo->vehicle?->year} {$wo->vehicle?->make} {$wo->vehicle?->model}",
-                        'status'    => $wo->status->label(),
+                    'reference_id' => $wo->id,
+                    'payload' => [
+                        'vehicle' => "{$wo->vehicle?->year} {$wo->vehicle?->make} {$wo->vehicle?->model}",
+                        'status' => $wo->status->label(),
                         'opened_at' => $wo->opened_at->toIso8601String(),
-                        'mechanic'  => $wo->mechanic?->name,
+                        'mechanic' => $wo->mechanic?->name,
                     ],
-                    'status'         => 'pending',
+                    'status' => 'pending',
                 ]);
             });
     }
@@ -91,42 +95,43 @@ class OperationsAlertService
             if (! $webhookUrl) {
                 // No webhook configured — just mark as delivered (logged only).
                 $alert->update([
-                    'status'       => 'delivered',
+                    'status' => 'delivered',
                     'delivered_at' => now(),
                 ]);
                 Log::info('Operations alert (logged only)', [
-                    'type'      => $alert->type->value,
+                    'type' => $alert->type->value,
                     'reference' => "{$alert->reference_type}#{$alert->reference_id}",
-                    'payload'   => $alert->payload,
+                    'payload' => $alert->payload,
                 ]);
+
                 return;
             }
 
             try {
                 $response = Http::timeout(5)->post($webhookUrl, [
-                    'type'      => $alert->type->value,
+                    'type' => $alert->type->value,
                     'reference' => [
                         'type' => $alert->reference_type,
-                        'id'   => $alert->reference_id,
+                        'id' => $alert->reference_id,
                     ],
-                    'payload'   => $alert->payload,
+                    'payload' => $alert->payload,
                     'timestamp' => now()->toIso8601String(),
                 ]);
 
                 if ($response->successful()) {
                     $alert->update([
-                        'status'       => 'delivered',
+                        'status' => 'delivered',
                         'delivered_at' => now(),
                     ]);
                 } else {
                     $alert->update([
-                        'status'        => 'failed',
+                        'status' => 'failed',
                         'error_message' => "HTTP {$response->status()}: {$response->body()}",
                     ]);
                 }
             } catch (\Exception $e) {
                 $alert->update([
-                    'status'        => 'failed',
+                    'status' => 'failed',
                     'error_message' => $e->getMessage(),
                 ]);
             }

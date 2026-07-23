@@ -9,17 +9,22 @@ use Livewire\Component;
 class Vehicles extends Component
 {
     public bool $showAddForm = false;
+
     public string $make = '';
+
     public string $model = '';
+
     public string $year = '';
+
     public string $plate = '';
+
     public string $mileage = '';
 
     protected $rules = [
-        'make'    => 'required|string|max:50',
-        'model'   => 'required|string|max:50',
-        'year'    => 'required|string|size:4',
-        'plate'   => 'nullable|string|max:20',
+        'make' => 'required|string|max:50',
+        'model' => 'required|string|max:50',
+        'year' => 'required|string|size:4',
+        'plate' => 'nullable|string|max:20',
         'mileage' => 'nullable|integer|min:0',
     ];
 
@@ -29,11 +34,11 @@ class Vehicles extends Component
 
         $customer = Auth::user()->customer ?: Auth::user()->customer()->create([]);
         Vehicle::create([
-            'customer_id'     => $customer->id,
-            'make'            => $this->make,
-            'model'           => $this->model,
-            'year'            => $this->year,
-            'license_plate'   => $this->plate ?: null,
+            'customer_id' => $customer->id,
+            'make' => $this->make,
+            'model' => $this->model,
+            'year' => $this->year,
+            'license_plate' => $this->plate ?: null,
             'current_mileage' => $this->mileage ? (int) $this->mileage : null,
         ]);
 

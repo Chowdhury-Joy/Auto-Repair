@@ -15,8 +15,11 @@ use UnitEnum;
 class MechanicResource extends Resource
 {
     protected static ?string $model = Mechanic::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-wrench-screwdriver';
-    protected static string | UnitEnum | null $navigationGroup = 'Shop Resources';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Shop Resources';
+
     protected static ?int $navigationSort = 11;
 
     public static function form(Schema $schema): Schema
@@ -46,9 +49,9 @@ class MechanicResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListMechanics::route('/'),
+            'index' => Pages\ListMechanics::route('/'),
             'create' => Pages\CreateMechanic::route('/create'),
-            'edit'   => Pages\EditMechanic::route('/{record}/edit'),
+            'edit' => Pages\EditMechanic::route('/{record}/edit'),
         ];
     }
 }

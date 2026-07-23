@@ -14,8 +14,11 @@ use UnitEnum;
 class OperationsAlertResource extends Resource
 {
     protected static ?string $model = OperationsAlert::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell-alert';
-    protected static string | UnitEnum | null $navigationGroup = 'System';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
+
+    protected static string|UnitEnum|null $navigationGroup = 'System';
+
     protected static ?int $navigationSort = 99;
 
     public static function canCreate(): bool
@@ -35,7 +38,7 @@ class OperationsAlertResource extends Resource
                     ->formatStateUsing(fn ($s) => class_basename($s)),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn ($s) => match($s) {
+                    ->color(fn ($s) => match ($s) {
                         'pending' => 'warning',
                         'delivered' => 'success',
                         'failed' => 'danger',

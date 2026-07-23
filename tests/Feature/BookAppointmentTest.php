@@ -1,12 +1,12 @@
 <?php
 
 use App\Enums\AppointmentStatus;
+use App\Livewire\BookAppointment;
 use App\Models\Appointment;
 use App\Models\Mechanic;
 use App\Models\ServiceBay;
 use App\Models\ServiceType;
 use App\Models\ShopHour;
-use App\Services\AppointmentAvailabilityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -17,9 +17,9 @@ beforeEach(function () {
     foreach (range(1, 7) as $dow) {
         ShopHour::create([
             'day_of_week' => $dow,
-            'opens_at'    => '08:00',
-            'closes_at'   => '18:00',
-            'is_closed'   => false,
+            'opens_at' => '08:00',
+            'closes_at' => '18:00',
+            'is_closed' => false,
         ]);
     }
 
@@ -38,7 +38,7 @@ it('can complete multi-step booking flow', function () {
 
     $date = CarbonImmutable::now()->addDay()->format('Y-m-d');
 
-    Livewire::test(\App\Livewire\BookAppointment::class)
+    Livewire::test(BookAppointment::class)
         ->set('selectedServiceIds', [$svc->id])
         ->call('nextStep')
         ->assertSet('step', 2)

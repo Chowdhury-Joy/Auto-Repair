@@ -19,20 +19,20 @@ class TrueWrenchDemoSeeder extends Seeder
     {
         // --- Shop hours: Mon-Fri 8-6, Sat 9-2, Sun closed ---
         $hours = [
-            1 => ['08:00','18:00',false],
-            2 => ['08:00','18:00',false],
-            3 => ['08:00','18:00',false],
-            4 => ['08:00','18:00',false],
-            5 => ['08:00','18:00',false],
-            6 => ['09:00','14:00',false],
+            1 => ['08:00', '18:00', false],
+            2 => ['08:00', '18:00', false],
+            3 => ['08:00', '18:00', false],
+            4 => ['08:00', '18:00', false],
+            5 => ['08:00', '18:00', false],
+            6 => ['09:00', '14:00', false],
             7 => [null,   null,   true],
         ];
         foreach ($hours as $dow => [$open, $close, $closed]) {
             ShopHour::create([
                 'day_of_week' => $dow,
-                'opens_at'    => $open,
-                'closes_at'   => $close,
-                'is_closed'   => $closed,
+                'opens_at' => $open,
+                'closes_at' => $close,
+                'is_closed' => $closed,
             ]);
         }
 
@@ -54,7 +54,7 @@ class TrueWrenchDemoSeeder extends Seeder
             ['Diagnostic',          'Check-engine / electrical diagnosis, 1-hour max.', 60, 9500, 15000],
             ['Tire Rotation',       'Rotate and inspect all four tires.', 30, 3000, 5000],
             ['State Inspection',    'Annual safety and emissions inspection.', 45, 6000, 9000],
-            ['Transmission Service','Fluid drain-and-fill, pan inspection.', 90, 18000, 30000],
+            ['Transmission Service', 'Fluid drain-and-fill, pan inspection.', 90, 18000, 30000],
         ];
         foreach ($menu as $i => [$name, $desc, $mins, $lo, $hi]) {
             ServiceType::create([

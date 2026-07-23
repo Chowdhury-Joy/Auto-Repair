@@ -2,13 +2,14 @@
 
 namespace App\Livewire;
 
-use App\Enums\AppointmentStatus;
+use App\Enums\UserRole;
+use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\ServiceType;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppointmentAvailabilityService;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Locked;
@@ -22,25 +23,36 @@ class BookAppointment extends Component
 
     // Step 2: date + time
     public ?string $selectedDate = null;
+
     public ?string $selectedTime = null;
 
     // Step 3: vehicle + contact
-    public bool   $useExistingVehicle = false;
-    public ?int   $existingVehicleId  = null;
-    public string $newVehicleMake    = '';
-    public string $newVehicleModel   = '';
-    public string $newVehicleYear    = '';
-    public string $newVehiclePlate   = '';
+    public bool $useExistingVehicle = false;
+
+    public ?int $existingVehicleId = null;
+
+    public string $newVehicleMake = '';
+
+    public string $newVehicleModel = '';
+
+    public string $newVehicleYear = '';
+
+    public string $newVehiclePlate = '';
+
     public string $newVehicleMileage = '';
 
-    public string $contactName   = '';
-    public string $contactEmail  = '';
-    public string $contactPhone  = '';
+    public string $contactName = '';
+
+    public string $contactEmail = '';
+
+    public string $contactPhone = '';
+
     public string $customerNotes = '';
 
     // Flow state
     #[Locked]
     public int $step = 1;
+
     public ?int $confirmedAppointmentId = null;
 
     // Cached availability (recomputed when services or date change)
@@ -50,7 +62,7 @@ class BookAppointment extends Component
     {
         if (Auth::check()) {
             $user = Auth::user();
-            $this->contactName  = $user->name;
+            $this->contactName = $user->name;
             $this->contactEmail = $user->email;
             $this->contactPhone = $user->phone ?? '';
         }
@@ -85,6 +97,7 @@ class BookAppointment extends Component
         if ($this->step === 1) {
             if (empty($this->selectedServiceIds)) {
                 session()->flash('error', 'Please select at least one service.');
+
                 return;
             }
             $this->step = 2;
@@ -92,12 +105,14 @@ class BookAppointment extends Component
         } elseif ($this->step === 2) {
             if ($this->selectedDate === null || $this->selectedTime === null) {
                 session()->flash('error', 'Please pick a date and time.');
+
                 return;
             }
             // Re-verify the slot is still available before letting them proceed.
             if (! $this->slotStillAvailable()) {
                 session()->flash('error', 'Sorry, that slot was just taken. Please pick another.');
                 $this->recomputeSlots();
+
                 return;
             }
             $this->step = 3;
@@ -108,7 +123,9 @@ class BookAppointment extends Component
 
     public function backStep(): void
     {
-        if ($this->step > 1) $this->step--;
+        if ($this->step > 1) {
+            $this->step--;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -122,6 +139,7 @@ class BookAppointment extends Component
             session()->flash('error', 'That slot is no longer available. Please choose another.');
             $this->step = 2;
             $this->recomputeSlots();
+
             return;
         }
 
@@ -150,12 +168,13 @@ class BookAppointment extends Component
     {
         if (empty($this->selectedServiceIds)) {
             $this->availableSlots = [];
+
             return;
         }
 
         $service = app(AppointmentAvailabilityService::class);
         $from = CarbonImmutable::now()->startOfDay();
-        $to   = $from->addDays(13); // 14-day window
+        $to = $from->addDays(13); // 14-day window
 
         $this->availableSlots = $service->getAvailableSlots($from, $to, $this->selectedServiceIds);
 
@@ -167,10 +186,12 @@ class BookAppointment extends Component
 
     private function slotStillAvailable(): bool
     {
-        if ($this->selectedDate === null || $this->selectedTime === null) return false;
+        if ($this->selectedDate === null || $this->selectedTime === null) {
+            return false;
+        }
 
         $service = app(AppointmentAvailabilityService::class);
-        $slots   = $service->getAvailableSlots(
+        $slots = $service->getAvailableSlots(
             CarbonImmutable::parse($this->selectedDate),
             CarbonImmutable::parse($this->selectedDate),
             $this->selectedServiceIds,
@@ -180,7 +201,7 @@ class BookAppointment extends Component
             && in_array($this->selectedTime, $slots[$this->selectedDate], true);
     }
 
-    private function createAppointment(): \App\Models\Appointment
+    private function createAppointment(): Appointment
     {
         return DB::transaction(function () {
             // Resolve or create customer.
@@ -190,11 +211,12 @@ class BookAppointment extends Component
             $vehicle = $this->resolveVehicle($customer);
 
             // Compute starts_at as a CarbonImmutable.
-            $startsAt = CarbonImmutable::parse($this->selectedDate . ' ' . $this->selectedTime);
+            $startsAt = CarbonImmutable::parse($this->selectedDate.' '.$this->selectedTime);
 
             // Book via the availability service — this handles bay+mechanic assignment
             // and concurrency protection.
             $service = app(AppointmentAvailabilityService::class);
+
             return $service->book(
                 $startsAt,
                 $this->selectedServiceIds,
@@ -209,19 +231,25 @@ class BookAppointment extends Component
     {
         if (Auth::check()) {
             $user = Auth::user();
+
             return $user->customer ?: $user->customer()->create([]);
         }
 
         // Guest flow: find or create a User + Customer by email.
-        $user = \App\Models\User::firstOrCreate(
-            ['email' => $this->contactEmail],
-            [
-                'name'     => $this->contactName,
-                'password' => bcrypt(str()->random(24)), // unusable — they'll reset if needed
-                'phone'    => $this->contactPhone,
-                'role'     => \App\Enums\UserRole::Customer,
-            ],
-        );
+        $user = User::where('email', $this->contactEmail)->first();
+        
+        if (!$user) {
+            $user = User::create([
+                'name' => $this->contactName,
+                'email' => $this->contactEmail,
+                'password' => bcrypt('password'), // default password for demo
+                'phone' => $this->contactPhone,
+                'role' => UserRole::Customer,
+            ]);
+            
+            session()->flash('success', "An account has been created for you. You can log in to the portal with password 'password'.");
+        }
+
         return $user->customer ?: $user->customer()->create([]);
     }
 
@@ -231,15 +259,17 @@ class BookAppointment extends Component
             $vehicle = Vehicle::where('id', $this->existingVehicleId)
                 ->where('customer_id', $customer->id)
                 ->first();
-            if ($vehicle) return $vehicle;
+            if ($vehicle) {
+                return $vehicle;
+            }
         }
 
         return Vehicle::create([
-            'customer_id'     => $customer->id,
-            'make'            => $this->newVehicleMake,
-            'model'           => $this->newVehicleModel,
-            'year'            => $this->newVehicleYear,
-            'license_plate'   => $this->newVehiclePlate ?: null,
+            'customer_id' => $customer->id,
+            'make' => $this->newVehicleMake,
+            'model' => $this->newVehicleModel,
+            'year' => $this->newVehicleYear,
+            'license_plate' => $this->newVehiclePlate ?: null,
             'current_mileage' => $this->newVehicleMileage ? (int) $this->newVehicleMileage : null,
         ]);
     }
@@ -261,23 +291,32 @@ class BookAppointment extends Component
     public function getPriceRangeProperty(): string
     {
         $services = ServiceType::whereIn('id', $this->selectedServiceIds)->get();
-        if ($services->isEmpty()) return '';
+        if ($services->isEmpty()) {
+            return '';
+        }
         $min = $services->sum('price_range_min_cents');
         $max = $services->sum('price_range_max_cents');
-        return '$' . number_format($min / 100, 0) . ' – $' . number_format($max / 100, 0);
+
+        return '$'.number_format($min / 100, 0).' – $'.number_format($max / 100, 0);
     }
 
     public function getMyVehiclesProperty()
     {
-        if (! Auth::check()) return collect();
+        if (! Auth::check()) {
+            return collect();
+        }
         $customer = Auth::user()->customer;
+
         return $customer ? $customer->vehicles : collect();
     }
 
     public function getConfirmedAppointmentProperty()
     {
-        if (! $this->confirmedAppointmentId) return null;
-        return \App\Models\Appointment::with(['serviceBay','mechanic','vehicle','serviceTypes','customer.user'])
+        if (! $this->confirmedAppointmentId) {
+            return null;
+        }
+
+        return Appointment::with(['serviceBay', 'mechanic', 'vehicle', 'serviceTypes', 'customer.user'])
             ->find($this->confirmedAppointmentId);
     }
 

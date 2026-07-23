@@ -17,6 +17,7 @@ class Dashboard extends Component
 
         $vehicles = $customer?->vehicles ?? collect();
         $upcomingAppointments = Appointment::query()
+            ->with(['vehicle', 'serviceTypes'])
             ->where('customer_id', $customer?->id)
             ->whereIn('status', [AppointmentStatus::Scheduled, AppointmentStatus::CheckedIn])
             ->where('starts_at', '>=', now())
@@ -36,9 +37,9 @@ class Dashboard extends Component
             ->get();
 
         return view('livewire.portal.dashboard', [
-            'vehicles'              => $vehicles,
-            'upcomingAppointments'  => $upcomingAppointments,
-            'inProgressWorkOrders'  => $inProgressWorkOrders,
+            'vehicles' => $vehicles,
+            'upcomingAppointments' => $upcomingAppointments,
+            'inProgressWorkOrders' => $inProgressWorkOrders,
         ])->layout('layouts.portal', ['title' => 'My Garage · TrueWrench']);
     }
 }

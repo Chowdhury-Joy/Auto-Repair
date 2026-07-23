@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class ServiceType extends Model
 {
@@ -15,11 +15,11 @@ class ServiceType extends Model
     ];
 
     protected $casts = [
-        'duration_minutes'      => 'integer',
+        'duration_minutes' => 'integer',
         'price_range_min_cents' => 'integer',
         'price_range_max_cents' => 'integer',
-        'is_active'             => 'boolean',
-        'sort_order'            => 'integer',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     public function appointments(): BelongsToMany
@@ -39,7 +39,7 @@ class ServiceType extends Model
 
     public function formattedPriceRange(): string
     {
-        return '$' . number_format($this->price_range_min_cents / 100, 0)
-             . ' – $' . number_format($this->price_range_max_cents / 100, 0);
+        return '$'.number_format($this->price_range_min_cents / 100, 0)
+             .' – $'.number_format($this->price_range_max_cents / 100, 0);
     }
 }

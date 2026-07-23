@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\ServiceBay;
 use Filament\Widgets\Widget;
@@ -10,8 +9,10 @@ use Filament\Widgets\Widget;
 class TodayScheduleWidget extends Widget
 {
     protected static ?string $pollingInterval = '60s';
+
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.today-schedule';
 
@@ -28,7 +29,7 @@ class TodayScheduleWidget extends Widget
             ->groupBy('service_bay_id');
 
         return [
-            'bays'  => $bays,
+            'bays' => $bays,
             'appts' => $appts,
             'today' => $today,
         ];

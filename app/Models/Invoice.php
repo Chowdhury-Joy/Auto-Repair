@@ -16,9 +16,9 @@ class Invoice extends Model
 
     protected $casts = [
         'total_cents' => 'integer',
-        'issued_at'   => 'datetime',
-        'paid_at'     => 'datetime',
-        'status'      => InvoiceStatus::class,
+        'issued_at' => 'datetime',
+        'paid_at' => 'datetime',
+        'status' => InvoiceStatus::class,
     ];
 
     public function workOrder(): BelongsTo
@@ -55,7 +55,8 @@ class Invoice extends Model
     {
         $year = date('Y');
         $count = self::whereYear('created_at', $year)->count() + 1;
-        return "TW-{$year}-" . str_pad((string) $count, 5, '0', STR_PAD_LEFT);
+
+        return "TW-{$year}-".str_pad((string) $count, 5, '0', STR_PAD_LEFT);
     }
 
     public static function generateToken(): string

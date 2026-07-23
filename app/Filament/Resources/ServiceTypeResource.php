@@ -15,9 +15,13 @@ use UnitEnum;
 class ServiceTypeResource extends Resource
 {
     protected static ?string $model = ServiceType::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
-    protected static string | UnitEnum | null $navigationGroup = 'Shop Resources';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Shop Resources';
+
     protected static ?int $navigationSort = 12;
+
     protected static ?string $navigationLabel = 'Service Menu';
 
     public static function form(Schema $schema): Schema
@@ -46,9 +50,9 @@ class ServiceTypeResource extends Resource
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('duration_minutes')->label('Minutes')->sortable(),
                 Tables\Columns\TextColumn::make('price_range_min_cents')
-                    ->label('Min')->formatStateUsing(fn ($s) => '$'.number_format($s/100,0)),
+                    ->label('Min')->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 0)),
                 Tables\Columns\TextColumn::make('price_range_max_cents')
-                    ->label('Max')->formatStateUsing(fn ($s) => '$'.number_format($s/100,0)),
+                    ->label('Max')->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 0)),
                 Tables\Columns\IconColumn::make('is_active')->boolean(),
             ])
             ->defaultSort('sort_order')
@@ -59,9 +63,9 @@ class ServiceTypeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListServiceTypes::route('/'),
+            'index' => Pages\ListServiceTypes::route('/'),
             'create' => Pages\CreateServiceType::route('/create'),
-            'edit'   => Pages\EditServiceType::route('/{record}/edit'),
+            'edit' => Pages\EditServiceType::route('/{record}/edit'),
         ];
     }
 }

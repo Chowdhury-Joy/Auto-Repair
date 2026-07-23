@@ -7,15 +7,16 @@ use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Mechanic;
 use App\Models\ServiceBay;
+use App\Services\CheckInService;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -23,8 +24,11 @@ use UnitEnum;
 class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
-    protected static string | UnitEnum | null $navigationGroup = 'Operations';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
@@ -125,7 +129,7 @@ class AppointmentResource extends Resource
                     ->color('warning')
                     ->requiresConfirmation()
                     ->visible(fn (Appointment $r) => $r->status === AppointmentStatus::Scheduled)
-                    ->action(fn (Appointment $r) => app(\App\Services\CheckInService::class)->checkIn($r)),
+                    ->action(fn (Appointment $r) => app(CheckInService::class)->checkIn($r)),
 
                 // Mark no-show.
                 Tables\Actions\Action::make('noShow')
@@ -164,7 +168,7 @@ class AppointmentResource extends Resource
                     ->action(function (Appointment $r, array $data) {
                         $r->update([
                             'service_bay_id' => $data['service_bay_id'],
-                            'mechanic_id'    => $data['mechanic_id'],
+                            'mechanic_id' => $data['mechanic_id'],
                         ]);
                     }),
 
@@ -180,9 +184,9 @@ class AppointmentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAppointments::route('/'),
+            'index' => Pages\ListAppointments::route('/'),
             'create' => Pages\CreateAppointment::route('/create'),
-            'edit'   => Pages\EditAppointment::route('/{record}/edit'),
+            'edit' => Pages\EditAppointment::route('/{record}/edit'),
         ];
     }
 }

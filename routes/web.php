@@ -6,6 +6,10 @@ use App\Livewire\Portal\Dashboard as PortalDashboard;
 use App\Livewire\Portal\Invoices as PortalInvoices;
 use App\Livewire\Portal\VehicleDetail as PortalVehicleDetail;
 use App\Livewire\Portal\Vehicles as PortalVehicles;
+use App\Livewire\Auth\CustomerLogin;
+use App\Models\Invoice;
+use App\Models\ServiceType;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // --- Public Marketing Pages ---
@@ -18,7 +22,8 @@ Route::get('/about', function () {
 })->name('about');
 
 Route::get('/services', function () {
-    $services = \App\Models\ServiceType::active()->menuOrdered()->get();
+    $services = ServiceType::active()->menuOrdered()->get();
+
     return view('marketing.services', compact('services'));
 })->name('services');
 
@@ -27,6 +32,15 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::get('/book', BookAppointment::class)->name('book');
+
+// --- Customer Auth ---
+Route::get('/login', CustomerLogin::class)->name('login');
+Route::post('/logout', function () {
+    Auth::logout();
+    session()->invalidate();
+    session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
 
 // --- Customer Portal (Auth required) ---
 Route::middleware('auth')->prefix('portal')->group(function () {
@@ -39,7 +53,7 @@ Route::middleware('auth')->prefix('portal')->group(function () {
 
 // --- Public Invoice View (No auth, token-based) ---
 Route::get('/invoices/{token}', function (string $token) {
-    $invoice = \App\Models\Invoice::where('public_token', $token)
+    $invoice = Invoice::where('public_token', $token)
         ->with(['workOrder.items', 'workOrder.vehicle', 'customer.user'])
         ->firstOrFail();
 

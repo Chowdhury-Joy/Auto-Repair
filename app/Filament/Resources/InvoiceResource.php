@@ -16,8 +16,11 @@ use UnitEnum;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-receipt-percent';
-    protected static string | UnitEnum | null $navigationGroup = 'Operations';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-receipt-percent';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Operations';
+
     protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
@@ -29,7 +32,7 @@ class InvoiceResource extends Resource
                 ->required(),
             Forms\Components\TextInput::make('total_cents')
                 ->label('Total ($)')
-                ->formatStateUsing(fn ($state) => '$' . number_format(((int) $state) / 100, 2))
+                ->formatStateUsing(fn ($state) => '$'.number_format(((int) $state) / 100, 2))
                 ->disabled(),
             Forms\Components\DateTimePicker::make('paid_at'),
         ]);
@@ -47,7 +50,7 @@ class InvoiceResource extends Resource
                     ->formatStateUsing(fn (InvoiceStatus $s) => $s->label()),
                 Tables\Columns\TextColumn::make('total_cents')
                     ->label('Amount')
-                    ->formatStateUsing(fn ($s) => '$' . number_format($s / 100, 2)),
+                    ->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 2)),
                 Tables\Columns\TextColumn::make('issued_at')->dateTime()->sortable(),
                 Tables\Columns\TextColumn::make('paid_at')->dateTime()->sortable(),
             ])
@@ -72,7 +75,7 @@ class InvoiceResource extends Resource
     {
         return [
             'index' => Pages\ListInvoices::route('/'),
-            'edit'  => Pages\EditInvoice::route('/{record}/edit'),
+            'edit' => Pages\EditInvoice::route('/{record}/edit'),
         ];
     }
 }

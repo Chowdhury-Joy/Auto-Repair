@@ -17,10 +17,10 @@ class WorkOrder extends Model
     ];
 
     protected $casts = [
-        'opened_at'    => 'datetime',
+        'opened_at' => 'datetime',
         'completed_at' => 'datetime',
-        'total_cents'  => 'integer',
-        'status'       => WorkOrderStatus::class,
+        'total_cents' => 'integer',
+        'status' => WorkOrderStatus::class,
     ];
 
     public function appointment(): BelongsTo
@@ -72,6 +72,7 @@ class WorkOrder extends Model
     {
         $total = (int) $this->items()->sum('amount_cents');
         $this->update(['total_cents' => $total]);
+
         return $total;
     }
 }

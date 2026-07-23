@@ -15,9 +15,13 @@ use UnitEnum;
 class ShopHourResource extends Resource
 {
     protected static ?string $model = ShopHour::class;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-clock';
-    protected static string | UnitEnum | null $navigationGroup = 'Shop Resources';
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clock';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Shop Resources';
+
     protected static ?int $navigationSort = 13;
+
     protected static ?string $navigationLabel = 'Shop Hours';
 
     // Only 7 rows ever exist — edit-in-place on the list.
@@ -28,10 +32,11 @@ class ShopHourResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
         return $schema->components([
             Forms\Components\Select::make('day_of_week')
-                ->options(array_combine(range(1,7), $days))
+                ->options(array_combine(range(1, 7), $days))
                 ->required(),
             Forms\Components\Toggle::make('is_closed'),
             Forms\Components\TimePicker::make('opens_at')->seconds(false)->nullable(),
@@ -41,7 +46,8 @@ class ShopHourResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $days = [1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat',7=>'Sun'];
+        $days = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('day_of_week')
@@ -59,7 +65,7 @@ class ShopHourResource extends Resource
     {
         return [
             'index' => Pages\ListShopHours::route('/'),
-            'edit'  => Pages\EditShopHour::route('/{record}/edit'),
+            'edit' => Pages\EditShopHour::route('/{record}/edit'),
         ];
     }
 }
