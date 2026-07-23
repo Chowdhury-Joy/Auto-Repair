@@ -118,14 +118,14 @@ class AppointmentResource extends Resource
                     ->options(Mechanic::ordered()->pluck('name', 'id')),
             ])
             ->actions([
-                // Check in: only valid for scheduled appointments arriving today.
+                // Check in: creates WorkOrder & updates appointment status
                 Tables\Actions\Action::make('checkIn')
                     ->label('Check in')
                     ->icon('heroicon-o-arrow-right-on-rectangle')
                     ->color('warning')
                     ->requiresConfirmation()
                     ->visible(fn (Appointment $r) => $r->status === AppointmentStatus::Scheduled)
-                    ->action(fn (Appointment $r) => $r->update(['status' => AppointmentStatus::CheckedIn])),
+                    ->action(fn (Appointment $r) => app(\App\Services\CheckInService::class)->checkIn($r)),
 
                 // Mark no-show.
                 Tables\Actions\Action::make('noShow')

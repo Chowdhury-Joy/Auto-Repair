@@ -7,18 +7,20 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Appointment extends Model
 {
     protected $fillable = [
         'customer_id', 'vehicle_id', 'service_bay_id', 'mechanic_id',
-        'starts_at', 'ends_at', 'status', 'customer_notes', 'staff_notes',
+        'starts_at', 'ends_at', 'status', 'confirmed_at', 'customer_notes', 'staff_notes',
     ];
 
     protected $casts = [
-        'starts_at' => 'datetime',
-        'ends_at'   => 'datetime',
-        'status'    => AppointmentStatus::class,
+        'starts_at'    => 'datetime',
+        'ends_at'      => 'datetime',
+        'confirmed_at' => 'datetime',
+        'status'       => AppointmentStatus::class,
     ];
 
     public function customer(): BelongsTo
@@ -44,6 +46,11 @@ class Appointment extends Model
     public function serviceTypes(): BelongsToMany
     {
         return $this->belongsToMany(ServiceType::class);
+    }
+
+    public function workOrder(): HasOne
+    {
+        return $this->hasOne(WorkOrder::class);
     }
 
     /** Appointments that still occupy their bay + mechanic. */
@@ -75,5 +82,20 @@ class Appointment extends Model
     public function scopeForMechanic(Builder $q, int $mechanicId): Builder
     {
         return $q->where('mechanic_id', $mechanicId);
+    }
+
+    public function scopeUnconfirmed(Builder $q): Builder
+    {
+        return $q->whereNull('confirmed_at');
+    }
+
+    public function scopeUpcoming(Builder $q): Builder
+    {
+        return $q->where('starts_at', '>=', now());
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->confirmed_at !== null;
     }
 }
