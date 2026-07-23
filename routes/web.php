@@ -8,9 +8,23 @@ use App\Livewire\Portal\VehicleDetail as PortalVehicleDetail;
 use App\Livewire\Portal\Vehicles as PortalVehicles;
 use Illuminate\Support\Facades\Route;
 
+// --- Public Marketing Pages ---
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('marketing.home');
+})->name('home');
+
+Route::get('/about', function () {
+    return view('marketing.about');
+})->name('about');
+
+Route::get('/services', function () {
+    $services = \App\Models\ServiceType::active()->menuOrdered()->get();
+    return view('marketing.services', compact('services'));
+})->name('services');
+
+Route::get('/contact', function () {
+    return view('marketing.contact');
+})->name('contact');
 
 Route::get('/book', BookAppointment::class)->name('book');
 
