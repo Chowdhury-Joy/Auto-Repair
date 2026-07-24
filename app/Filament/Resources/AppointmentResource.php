@@ -99,8 +99,12 @@ class AppointmentResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (AppointmentStatus $s) => $s->color())
-                    ->formatStateUsing(fn (AppointmentStatus $s) => $s->label())
+                    // The closure parameter must be named $state (not $s or anything else) —
+                    // Filament injects the column's value by matching this exact parameter
+                    // name, and falls back to container-resolving the type-hint otherwise,
+                    // which throws for a non-instantiable enum the moment a row has data.
+                    ->color(fn (AppointmentStatus $state) => $state->color())
+                    ->formatStateUsing(fn (AppointmentStatus $state) => $state->label())
                     ->sortable(),
             ])
             ->defaultSort('starts_at', 'desc')

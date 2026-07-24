@@ -47,11 +47,13 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('customer.user.name')->label('Customer')->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (InvoiceStatus $s) => $s->color())
-                    ->formatStateUsing(fn (InvoiceStatus $s) => $s->label()),
+                    // Parameter must be named $state — see AppointmentResource for why
+                    // (Filament matches this closure's injected value by parameter name).
+                    ->color(fn (InvoiceStatus $state) => $state->color())
+                    ->formatStateUsing(fn (InvoiceStatus $state) => $state->label()),
                 Tables\Columns\TextColumn::make('total_cents')
                     ->label('Amount')
-                    ->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 2)),
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state / 100, 2)),
                 Tables\Columns\TextColumn::make('issued_at')->dateTime()->sortable(),
                 Tables\Columns\TextColumn::make('paid_at')->dateTime()->sortable(),
             ])

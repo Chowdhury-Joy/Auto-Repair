@@ -52,7 +52,7 @@ class ShopHourResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('day_of_week')
-                    ->formatStateUsing(fn ($s) => $days[$s] ?? $s)->sortable(),
+                    ->formatStateUsing(fn ($state) => $days[$state] ?? $state)->sortable(),
                 Tables\Columns\IconColumn::make('is_closed')->boolean(),
                 Tables\Columns\TextColumn::make('opens_at'),
                 Tables\Columns\TextColumn::make('closes_at'),

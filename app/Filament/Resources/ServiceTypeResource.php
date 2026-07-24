@@ -51,9 +51,9 @@ class ServiceTypeResource extends Resource
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('duration_minutes')->label('Minutes')->sortable(),
                 Tables\Columns\TextColumn::make('price_range_min_cents')
-                    ->label('Min')->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 0)),
+                    ->label('Min')->formatStateUsing(fn ($state) => '$'.number_format($state / 100, 0)),
                 Tables\Columns\TextColumn::make('price_range_max_cents')
-                    ->label('Max')->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 0)),
+                    ->label('Max')->formatStateUsing(fn ($state) => '$'.number_format($state / 100, 0)),
                 Tables\Columns\IconColumn::make('is_active')->boolean(),
             ])
             ->defaultSort('sort_order')

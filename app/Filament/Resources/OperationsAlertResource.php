@@ -33,12 +33,14 @@ class OperationsAlertResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Triggered')->dateTime()->sortable(),
                 Tables\Columns\TextColumn::make('type')
                     ->badge()
-                    ->formatStateUsing(fn (AlertType $s) => $s->label()),
+                    // Parameter must be named $state — see AppointmentResource for why
+                    // (Filament matches this closure's injected value by parameter name).
+                    ->formatStateUsing(fn (AlertType $state) => $state->label()),
                 Tables\Columns\TextColumn::make('reference_type')
-                    ->formatStateUsing(fn ($s) => class_basename($s)),
+                    ->formatStateUsing(fn ($state) => class_basename($state)),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn ($s) => match ($s) {
+                    ->color(fn ($state) => match ($state) {
                         'pending' => 'warning',
                         'delivered' => 'success',
                         'failed' => 'danger',

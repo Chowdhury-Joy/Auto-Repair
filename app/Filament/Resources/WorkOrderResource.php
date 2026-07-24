@@ -9,8 +9,8 @@ use App\Services\WorkOrderCompletionService;
 use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Forms\Components\Repeater;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Repeater;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -80,11 +80,13 @@ class WorkOrderResource extends Resource
                 Tables\Columns\TextColumn::make('mechanic.name')->label('Mechanic'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (WorkOrderStatus $s) => $s->color())
-                    ->formatStateUsing(fn (WorkOrderStatus $s) => $s->label()),
+                    // Parameter must be named $state — see AppointmentResource for why
+                    // (Filament matches this closure's injected value by parameter name).
+                    ->color(fn (WorkOrderStatus $state) => $state->color())
+                    ->formatStateUsing(fn (WorkOrderStatus $state) => $state->label()),
                 Tables\Columns\TextColumn::make('total_cents')
                     ->label('Total')
-                    ->formatStateUsing(fn ($s) => '$'.number_format($s / 100, 2))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state / 100, 2))
                     ->sortable(),
             ])
             ->defaultSort('opened_at', 'desc')
