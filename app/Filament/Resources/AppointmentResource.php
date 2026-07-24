@@ -9,6 +9,7 @@ use App\Models\Mechanic;
 use App\Models\ServiceBay;
 use App\Services\CheckInService;
 use BackedEnum;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -123,7 +124,7 @@ class AppointmentResource extends Resource
             ])
             ->actions([
                 // Check in: creates WorkOrder & updates appointment status
-                Tables\Actions\Action::make('checkIn')
+                Actions\Action::make('checkIn')
                     ->label('Check in')
                     ->icon('heroicon-o-arrow-right-on-rectangle')
                     ->color('warning')
@@ -132,7 +133,7 @@ class AppointmentResource extends Resource
                     ->action(fn (Appointment $r) => app(CheckInService::class)->checkIn($r)),
 
                 // Mark no-show.
-                Tables\Actions\Action::make('noShow')
+                Actions\Action::make('noShow')
                     ->label('No-show')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
@@ -141,7 +142,7 @@ class AppointmentResource extends Resource
                     ->action(fn (Appointment $r) => $r->update(['status' => AppointmentStatus::NoShow])),
 
                 // Cancel.
-                Tables\Actions\Action::make('cancel')
+                Actions\Action::make('cancel')
                     ->icon('heroicon-o-no-symbol')
                     ->color('gray')
                     ->requiresConfirmation()
@@ -150,7 +151,7 @@ class AppointmentResource extends Resource
                     ->action(fn (Appointment $r) => $r->update(['status' => AppointmentStatus::Cancelled])),
 
                 // Reassign bay + mechanic without touching status.
-                Tables\Actions\Action::make('reassign')
+                Actions\Action::make('reassign')
                     ->label('Reassign')
                     ->icon('heroicon-o-arrow-path')
                     ->form([
@@ -172,13 +173,24 @@ class AppointmentResource extends Resource
                         ]);
                     }),
 
-                Tables\Actions\EditAction::make(),
+                Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with([
+            'customer.user',
+            'vehicle',
+            'serviceTypes',
+            'serviceBay',
+            'mechanic',
+        ]);
     }
 
     public static function getPages(): array

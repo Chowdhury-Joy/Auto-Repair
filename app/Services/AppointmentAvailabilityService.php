@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AppointmentStatus;
+use App\Enums\WorkOrderStatus;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Mechanic;
@@ -10,6 +11,7 @@ use App\Models\ServiceBay;
 use App\Models\ServiceType;
 use App\Models\ShopHour;
 use App\Models\Vehicle;
+use App\Models\WorkOrder;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -47,10 +49,10 @@ class AppointmentAvailabilityService
             ->whereBetween('starts_at', [$from, $to])
             ->get();
 
-        $activeWorkOrders = \App\Models\WorkOrder::query()
+        $activeWorkOrders = WorkOrder::query()
             ->whereIn('status', [
-                \App\Enums\WorkOrderStatus::InProgress,
-                \App\Enums\WorkOrderStatus::AwaitingParts,
+                WorkOrderStatus::InProgress,
+                WorkOrderStatus::AwaitingParts,
             ])
             ->get();
 
@@ -121,8 +123,13 @@ class AppointmentAvailabilityService
         $totalMinutes = ServiceType::whereIn('id', $serviceTypeIds)->sum('duration_minutes');
         $endsAt = CarbonImmutable::parse($startsAt)->addMinutes($totalMinutes);
 
-        // Serialize concurrent bookings for the same day. Keyed by date so different
-        // days don't contend. 10-second TTL is a safety net; we release explicitly.
+        // CONCURRENCY CONTROL:
+        // Serialize concurrent bookings for the same calendar date using Redis/Cache locks. 
+        // This is necessary because multiple customers might try to book the last available 
+        // 9:00 AM slot on the same day. By locking on the date (`Y-m-d`), we ensure that 
+        // only one booking transaction is processed for that specific day at a time, 
+        // preventing double-booking of a bay or mechanic. The 10-second TTL prevents deadlocks 
+        // if the PHP process crashes mid-transaction.
         $lockKey = 'truewrench:booking:'.CarbonImmutable::parse($startsAt)->format('Y-m-d');
 
         return Cache::lock($lockKey, 10)->block(5, function () use (
@@ -177,8 +184,21 @@ class AppointmentAvailabilityService
     // -------------------------------------------------------------------------
 
     /**
-     * Given pre-fetched bays, mechanics, and appointments, determine whether at
-     * least one (bay, mechanic) pair is free for the entire [start, end) window.
+     * Checks if there's at least one available combination of a service bay and a mechanic 
+     * for the proposed [start, end) time window. 
+     * 
+     * Note: This is an IN-MEMORY check used for rapidly generating the initial list of 
+     * available slots to display on the calendar. It relies on the pre-fetched collections 
+     * of bays, mechanics, appointments, and active work orders. It does NOT guarantee 
+     * final availability due to race conditions (e.g. another customer booking simultaneously).
+     * 
+     * @param Collection $bays Pre-fetched active ServiceBays
+     * @param Collection $mechanics Pre-fetched active Mechanics
+     * @param Collection $appointments Pre-fetched active Appointments in the query window
+     * @param Collection $activeWorkOrders Pre-fetched active WorkOrders
+     * @param CarbonInterface $start Proposed start time
+     * @param CarbonInterface $end Proposed end time
+     * @return bool True if a valid (bay, mechanic) pairing is free
      */
     private function hasFreePair(
         Collection $bays,
@@ -208,8 +228,16 @@ class AppointmentAvailabilityService
 
         foreach ($activeWorkOrders as $wo) {
             $woStart = $wo->opened_at ? CarbonImmutable::parse($wo->opened_at) : now();
-            $woEnd = now()->addHours(1); // Assume it blocks for at least 1 more hour
-            
+            // KNOWN SIMPLIFICATION: we don't track how long a work order is actually
+            // expected to take, so this just assumes it occupies its bay/mechanic for
+            // one more hour from right now, regardless of how long it's already been
+            // open. That means a job open 5+ hours can look "free" sooner than it
+            // really is, and a job that's about to wrap up can look busier than it
+            // really is. A more accurate model would size this off the original
+            // appointment's ServiceType durations. Flagging so a future change to this
+            // heuristic is a deliberate decision, not an accidental regression.
+            $woEnd = now()->addHours(1);
+
             $overlaps = $woStart < $end && $woEnd > $start;
             if (! $overlaps) {
                 continue;
@@ -231,8 +259,14 @@ class AppointmentAvailabilityService
     }
 
     /**
-     * Same idea as hasFreePair, but queries the DB under the lock so we see
-     * the absolute latest state. Returns [bayId, mechanicId] or null.
+     * Final Database Check (The Source of Truth).
+     * 
+     * Unlike `hasFreePair()`, this method executes live COUNT/EXISTS queries against the 
+     * database within an active Database Transaction and an exclusive Cache lock. This ensures 
+     * that we see any newly committed appointments/work orders that might have sneaked in 
+     * between the user viewing the calendar and clicking "Confirm".
+     * 
+     * @return array{0: int, 1: int}|null Returns [bayId, mechanicId] or null if no pairs remain.
      */
     private function findFreePairInTransaction(
         Collection $bays,
@@ -248,11 +282,11 @@ class AppointmentAvailabilityService
 
             $bayBusyByWO = false;
             if (now()->addHour()->gt($start)) {
-                $bayBusyByWO = \App\Models\WorkOrder::query()
+                $bayBusyByWO = WorkOrder::query()
                     ->where('service_bay_id', $bay->id)
                     ->whereIn('status', [
-                        \App\Enums\WorkOrderStatus::InProgress,
-                        \App\Enums\WorkOrderStatus::AwaitingParts,
+                        WorkOrderStatus::InProgress,
+                        WorkOrderStatus::AwaitingParts,
                     ])
                     ->where('opened_at', '<', $end)
                     ->exists();
@@ -270,11 +304,11 @@ class AppointmentAvailabilityService
 
                 $mechanicBusyByWO = false;
                 if (now()->addHour()->gt($start)) {
-                    $mechanicBusyByWO = \App\Models\WorkOrder::query()
+                    $mechanicBusyByWO = WorkOrder::query()
                         ->where('mechanic_id', $mechanic->id)
                         ->whereIn('status', [
-                            \App\Enums\WorkOrderStatus::InProgress,
-                            \App\Enums\WorkOrderStatus::AwaitingParts,
+                            WorkOrderStatus::InProgress,
+                            WorkOrderStatus::AwaitingParts,
                         ])
                         ->where('opened_at', '<', $end)
                         ->exists();

@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Actions\BookAppointmentAction;
 use App\Enums\UserRole;
+use App\Exceptions\AccountConflictException;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\ServiceType;
@@ -11,7 +13,7 @@ use App\Models\Vehicle;
 use App\Services\AppointmentAvailabilityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use RuntimeException;
@@ -54,6 +56,11 @@ class BookAppointment extends Component
     public int $step = 1;
 
     public ?int $confirmedAppointmentId = null;
+
+    // Set when confirm() is rejected because the typed contact email already belongs
+    // to an existing account (see AccountConflictException) — the view uses this to
+    // show a "log in instead" link rather than a generic error banner.
+    public bool $emailConflict = false;
 
     // Cached availability (recomputed when services or date change)
     public array $availableSlots = [];
@@ -127,8 +134,31 @@ class BookAppointment extends Component
                 'newVehiclePlate' => 'nullable|string|max:20',
                 'newVehicleMileage' => 'nullable|integer|min:0',
             ]);
+
+            // Surface the account-conflict rule here too (not just in confirm()) so a
+            // guest finds out before reaching the review screen. This is a UX nicety
+            // only — BookAppointmentAction::resolveCustomer() is the actual boundary
+            // that enforces it, since this step can be skipped by calling confirm()
+            // directly.
+            if ($this->emailBelongsToExistingAccount()) {
+                $this->emailConflict = true;
+                session()->flash('error', 'An account already exists for this email address. Please log in to book an appointment.');
+
+                return;
+            }
+
+            $this->emailConflict = false;
             $this->step = 4;
         }
+    }
+
+    private function emailBelongsToExistingAccount(): bool
+    {
+        if (Auth::check()) {
+            return false;
+        }
+
+        return User::where('email', Str::lower(trim($this->contactEmail)))->exists();
     }
 
     public function backStep(): void
@@ -157,6 +187,14 @@ class BookAppointment extends Component
             $appointment = $this->createAppointment();
             $this->confirmedAppointmentId = $appointment->id;
             $this->step = 5;
+        } catch (AccountConflictException $e) {
+            // Same rule as the nextStep() check above, but this is the one that
+            // actually matters — it fires even if step 3's check was bypassed
+            // (e.g. by calling confirm() directly), because the enforcement lives
+            // in BookAppointmentAction, not in this component's UI flow.
+            $this->emailConflict = true;
+            session()->flash('error', $e->getMessage());
+            $this->step = 3;
         } catch (RuntimeException $e) {
             session()->flash('error', $e->getMessage());
             $this->step = 2;
@@ -213,78 +251,23 @@ class BookAppointment extends Component
 
     private function createAppointment(): Appointment
     {
-        return DB::transaction(function () {
-            // Resolve or create customer.
-            $customer = $this->resolveCustomer();
-
-            // Resolve or create vehicle.
-            $vehicle = $this->resolveVehicle($customer);
-
-            // Compute starts_at as a CarbonImmutable.
-            $startsAt = CarbonImmutable::parse($this->selectedDate.' '.$this->selectedTime);
-
-            // Book via the availability service — this handles bay+mechanic assignment
-            // and concurrency protection.
-            $service = app(AppointmentAvailabilityService::class);
-
-            return $service->book(
-                $startsAt,
-                $this->selectedServiceIds,
-                $vehicle,
-                $customer,
-                $this->customerNotes ?: null,
-            );
-        });
-    }
-
-    private function resolveCustomer(): Customer
-    {
-        if (Auth::check()) {
-            $user = Auth::user();
-
-            return $user->customer ?: $user->customer()->create([]);
-        }
-
-        // Guest flow: find or create a User + Customer by email.
-        $user = User::where('email', $this->contactEmail)->first();
+        $action = app(BookAppointmentAction::class);
         
-        if ($user) {
-            throw new RuntimeException('An account already exists for this email address. Please log in to book an appointment.');
-        }
-
-        $password = \Illuminate\Support\Str::password(12);
-
-        $user = User::create([
-            'name' => $this->contactName,
-            'email' => $this->contactEmail,
-            'password' => bcrypt($password),
-            'phone' => $this->contactPhone,
-            'role' => UserRole::Customer,
-        ]);
-        
-        session()->flash('success', "An account has been created for you. You can set a password anytime using the 'Forgot Password' link on the login page.");
-
-        return $user->customer ?: $user->customer()->create([]);
-    }
-
-    private function resolveVehicle(Customer $customer): Vehicle
-    {
-        if ($this->useExistingVehicle && $this->existingVehicleId) {
-            $vehicle = Vehicle::where('id', $this->existingVehicleId)
-                ->where('customer_id', $customer->id)
-                ->first();
-            if ($vehicle) {
-                return $vehicle;
-            }
-        }
-
-        return Vehicle::create([
-            'customer_id' => $customer->id,
-            'make' => $this->newVehicleMake,
-            'model' => $this->newVehicleModel,
-            'year' => $this->newVehicleYear,
-            'license_plate' => $this->newVehiclePlate ?: null,
-            'current_mileage' => $this->newVehicleMileage ? (int) $this->newVehicleMileage : null,
+        return $action->execute([
+            'contactName' => $this->contactName,
+            'contactEmail' => $this->contactEmail,
+            'contactPhone' => $this->contactPhone,
+            'useExistingVehicle' => $this->useExistingVehicle,
+            'existingVehicleId' => $this->existingVehicleId,
+            'newVehicleMake' => $this->newVehicleMake,
+            'newVehicleModel' => $this->newVehicleModel,
+            'newVehicleYear' => $this->newVehicleYear,
+            'newVehiclePlate' => $this->newVehiclePlate,
+            'newVehicleMileage' => $this->newVehicleMileage,
+            'selectedDate' => $this->selectedDate,
+            'selectedTime' => $this->selectedTime,
+            'selectedServiceIds' => $this->selectedServiceIds,
+            'customerNotes' => $this->customerNotes,
         ]);
     }
 

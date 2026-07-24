@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Log;
 
 class OperationsAlertService
 {
+    /**
+     * Entrypoint for the cron schedule (typically runs every 5 minutes).
+     * Scans for anomalies and dispatches alerts via webhook.
+     */
     public function checkAndCreateAlerts(): void
     {
         $this->checkUnconfirmedAppointments();
@@ -87,6 +91,15 @@ class OperationsAlertService
             });
     }
 
+    /**
+     * Attempts to send pending alerts to the configured webhook URL.
+     * 
+     * GRACEFUL DEGRADATION:
+     * If no webhook URL is configured (e.g. local dev, or missing env var), 
+     * the system gracefully degrades by logging the alert to the local log file 
+     * and marking it as 'delivered' so it doesn't pile up in the queue.
+     * Uses a strict 5-second timeout to prevent the cron job from hanging on bad networks.
+     */
     private function dispatchPendingAlerts(): void
     {
         $webhookUrl = config('services.truewrench.webhook_url');

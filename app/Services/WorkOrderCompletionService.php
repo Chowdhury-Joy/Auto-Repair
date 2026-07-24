@@ -13,6 +13,19 @@ use Illuminate\Support\Facades\Cache;
 
 class WorkOrderCompletionService
 {
+    /**
+     * Completes a work order, closes the associated appointment, and optionally generates an invoice.
+     * 
+     * CONCURRENCY CONTROL:
+     * We use a scoped Cache lock keyed by the work order ID (`invoice_generation_{id}`).
+     * This prevents two mechanics from double-clicking the "Complete" button simultaneously 
+     * on the same work order, which would otherwise result in duplicate invoices being generated.
+     * By scoping to the ID, we allow different work orders to be completed concurrently.
+     * 
+     * @param WorkOrder $workOrder
+     * @param bool $generateInvoice
+     * @return Invoice|null
+     */
     public function complete(WorkOrder $workOrder, bool $generateInvoice = true): ?Invoice
     {
         return Cache::lock('invoice_generation_' . $workOrder->id, 5)->block(5, function () use ($workOrder, $generateInvoice) {

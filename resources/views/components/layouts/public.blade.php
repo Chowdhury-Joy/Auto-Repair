@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'TrueWrench Auto Repair' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 <body class="h-full antialiased flex flex-col justify-between">
     <header class="bg-brand-700 text-white shadow-sm" x-data="{ mobileMenuOpen: false }">
@@ -29,9 +30,9 @@
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center gap-6 text-sm">
-                <a href="/#services" class="hover:text-accent-400">Services</a>
-                <a href="/#about"    class="hover:text-accent-400">About</a>
-                <a href="/#contact"  class="hover:text-accent-400">Contact</a>
+                <a href="/services" class="hover:text-accent-400">Services</a>
+                <a href="/about"     class="hover:text-accent-400">About</a>
+                <a href="/contact"   class="hover:text-accent-400">Contact</a>
                 @auth
                     <a href="/admin" class="hover:text-accent-400">Shop Admin</a>
                     <form method="POST" action="/logout" class="inline">
@@ -50,9 +51,9 @@
         <!-- Mobile Menu -->
         <div class="md:hidden" id="mobile-menu" x-show="mobileMenuOpen" style="display: none;">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 shadow-inner bg-brand-800">
-                <a href="/#services" class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">Services</a>
-                <a href="/#about"    class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">About</a>
-                <a href="/#contact"  class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">Contact</a>
+                <a href="/services" class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">Services</a>
+                <a href="/about"     class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">About</a>
+                <a href="/contact"   class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">Contact</a>
                 @auth
                     <a href="/admin" class="hover:text-accent-400 block px-3 py-2 rounded-md text-base font-medium">Shop Admin</a>
                     <form method="POST" action="/logout" class="block w-full text-left">
@@ -88,5 +89,14 @@
             </div>
         </div>
     </footer>
+
+    {{-- Explicit, not auto-injected: plain Blade pages (marketing/*, public invoice) don't
+         render a Livewire component, so Livewire never gets a chance to auto-inject its
+         asset bundle — and that bundle is what ships Alpine, which the mobile menu button
+         above (x-data/x-show/@click) depends on. Without this, the hamburger menu silently
+         does nothing on every page except the ones that happen to be Livewire components
+         (/book, /login, portal/*). Safe to keep even on pages that ARE Livewire components:
+         Livewire detects this tag and skips its own auto-injection instead of doubling up. --}}
+    @livewireScripts
 </body>
 </html>

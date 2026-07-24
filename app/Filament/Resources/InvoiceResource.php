@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
 use BackedEnum;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -56,18 +57,18 @@ class InvoiceResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
-                Tables\Actions\Action::make('markSent')
+                Actions\Action::make('markSent')
                     ->visible(fn (Invoice $r) => $r->status === InvoiceStatus::Draft)
                     ->action(fn (Invoice $r) => $r->update(['status' => InvoiceStatus::Sent, 'issued_at' => now()])),
-                Tables\Actions\Action::make('markPaid')
+                Actions\Action::make('markPaid')
                     ->color('success')
                     ->visible(fn (Invoice $r) => $r->status !== InvoiceStatus::Paid)
                     ->action(fn (Invoice $r) => $r->update(['status' => InvoiceStatus::Paid, 'paid_at' => now()])),
-                Tables\Actions\Action::make('viewPublic')
+                Actions\Action::make('viewPublic')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (Invoice $r) => $r->publicUrl())
                     ->openUrlInNewTab(),
-                Tables\Actions\EditAction::make(),
+                Actions\EditAction::make(),
             ]);
     }
 

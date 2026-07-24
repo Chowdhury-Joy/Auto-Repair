@@ -4,11 +4,14 @@
             Today's Schedule — {{ $today->format('l, M j') }}
         </x-slot>
 
+        {{-- table-fixed + explicit widths: without it, a long bay name (e.g. "Bay 3
+             (Diagnostics)") blows past the "w-32" hint on an auto-layout table and
+             runs straight into the Schedule column with no visible gap. --}}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm table-fixed">
                 <thead>
                     <tr class="text-left text-slate-500 border-b border-slate-200">
-                        <th class="py-2 pr-4 w-32">Bay</th>
+                        <th class="py-2 pr-4 w-40">Bay</th>
                         <th class="py-2 pr-4">Schedule</th>
                     </tr>
                 </thead>

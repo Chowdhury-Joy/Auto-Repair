@@ -28,6 +28,9 @@
     @if(session()->has('error'))
         <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm">
             {{ session('error') }}
+            @if($emailConflict)
+                <a href="{{ route('login') }}" class="font-semibold underline ml-1">Log in →</a>
+            @endif
         </div>
     @endif
 
@@ -323,8 +326,12 @@
                 </ul>
             </div>
 
+            {{-- No confirmation email is actually sent yet — there's no Notification/Mailable
+                 wired up for this event. Once one exists, restore copy like "A confirmation
+                 has been sent to {{ $appt->customer?->user?->email }}." Until then, don't
+                 promise something that doesn't happen. --}}
             <p class="text-sm text-slate-500 mt-6">
-                A confirmation has been sent to <strong>{{ $appt->customer?->user?->email }}</strong>.
+                You can review this appointment anytime from <strong>My Garage</strong> in your account.
             </p>
 
             <button wire:click="startOver" class="mt-6 text-sm text-slate-600 hover:text-brand-700">

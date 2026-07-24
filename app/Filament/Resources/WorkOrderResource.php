@@ -7,6 +7,7 @@ use App\Filament\Resources\WorkOrderResource\Pages;
 use App\Models\WorkOrder;
 use App\Services\WorkOrderCompletionService;
 use BackedEnum;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Repeater;
@@ -94,32 +95,42 @@ class WorkOrderResource extends Resource
             ])
             ->actions([
                 // Progress the status easily.
-                Tables\Actions\Action::make('progressStatus')
+                Actions\Action::make('progressStatus')
                     ->label('Move to In Progress')
                     ->icon('heroicon-o-play')
                     ->color('primary')
                     ->visible(fn (WorkOrder $r) => in_array($r->status, [WorkOrderStatus::Open, WorkOrderStatus::AwaitingParts]))
                     ->action(fn (WorkOrder $r) => $r->update(['status' => WorkOrderStatus::InProgress])),
 
-                Tables\Actions\Action::make('readyForPickup')
+                Actions\Action::make('readyForPickup')
                     ->label('Ready for Pickup')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (WorkOrder $r) => $r->status === WorkOrderStatus::InProgress)
                     ->action(fn (WorkOrder $r) => $r->update(['status' => WorkOrderStatus::ReadyForPickup])),
 
-                Tables\Actions\Action::make('completeAndInvoice')
+                Actions\Action::make('completeAndInvoice')
                     ->label('Complete & Invoice')
                     ->icon('heroicon-o-banknotes')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->visible(fn (WorkOrder $r) => ! $r->status->isTerminal() && $r->invoice()->doesntExist())
+                    ->visible(fn (WorkOrder $r) => ! $r->status->isTerminal() && ! $r->invoice)
                     ->action(function (WorkOrder $r) {
                         app(WorkOrderCompletionService::class)->complete($r);
                     }),
 
-                Tables\Actions\EditAction::make(),
+                Actions\EditAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()->with([
+            'customer.user',
+            'vehicle',
+            'mechanic',
+            'invoice',
+        ]);
     }
 
     public static function getPages(): array

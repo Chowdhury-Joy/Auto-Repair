@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ShopHourResource\Pages;
 use App\Models\ShopHour;
 use BackedEnum;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -57,7 +58,7 @@ class ShopHourResource extends Resource
                 Tables\Columns\TextColumn::make('closes_at'),
             ])
             ->defaultSort('day_of_week')
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Actions\EditAction::make()])
             ->bulkActions([]);
     }
 

@@ -32,14 +32,16 @@ Route::get('/contact', function () {
 })->name('contact');
 
 Route::post('/contact', function (Illuminate\Http\Request $request) {
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email',
-        'message' => 'required',
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'message' => 'required|string|max:5000',
     ]);
-    
-    Illuminate\Support\Facades\Log::info('Contact message received', $request->all());
-    
+
+    // Persisted so staff can actually see/action it in /admin (App\Filament\Resources\ContactMessageResource) —
+    // logging alone meant every submission was effectively write-only.
+    \App\Models\ContactMessage::create($data);
+
     return back()->with('success', 'Thanks for your message! We will get back to you soon.');
 })->name('contact.submit');
 
